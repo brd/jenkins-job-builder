@@ -14,3 +14,6 @@ scm:
       scm-name: something_special
       use-author: true
       wipe-workspace: false
+      no-tags: true
+      honor-refspec: true
+      shallow-clone: true

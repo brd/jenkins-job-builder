@@ -143,16 +143,18 @@ def git(registry, xml_parent, data):
         * **excluded-users**: (`list(string)`) - list of users to ignore
             revisions from when polling for changes.
             (if polling is enabled, optional)
-        * **included-regions**: (`list(string)`) - list of file/folders to
-            include (optional)
         * **excluded-regions**: (`list(string)`) - list of file/folders to
             exclude (optional)
+        * **force-polling-using-workspace** (`bool`) - Force polling using
+            workspace (default false)
+        * **honor-refspec** (`bool`) - Honor refspec on initial clone.
+            (default false)
+        * **included-regions**: (`list(string)`) - list of file/folders to
+            include (optional)
         * **ignore-commits-with-messages** (`list(str)`) - Revisions committed
             with messages matching these patterns will be ignored. (optional)
         * **ignore-notify**: (`bool`) - Ignore notifyCommit URL accesses
             (default false)
-        * **force-polling-using-workspace** (`bool`) - Force polling using
-            workspace (default false)
         * **local-branch** (`string`) - Checkout/merge to local branch
             (optional)
         * **merge** (`dict`)
@@ -164,6 +166,7 @@ def git(registry, xml_parent, data):
               'subtree'. (default 'default')
             * **fast-forward-mode** (`string`) - merge fast-forward mode.
               Can be one of 'FF', 'FF_ONLY' or 'NO_FF'. (default 'FF')
+        * **no-tags** (`bool`) - Perform a clone without tags. (default: false)
         * **per-build-tag** (`bool`) - Create a tag in the workspace for every
             build. (default is inverse of skip-tag if set, otherwise false)
         * **prune** (`bool`) - Prune remote branches (default false)
@@ -370,15 +373,22 @@ def git(registry, xml_parent, data):
             raise InvalidAttributeError('fast-forward-mode', fast_forward_mode,
                                         fast_forward_modes)
         XML.SubElement(merge_opts, 'fastForwardMode').text = fast_forward_mode
+    if 'shallow-clone' in data or 'timeout' in data or \
+        'honor-refspec' in data or 'notags' in data:
+        clo = XML.SubElement(exts_node, impl_prefix + 'CloneOption')
+        if 'shallow-clone' in data:
+            XML.SubElement(clo, 'shallow').text = str(
+                data['shallow-clone']).lower()
+        if 'timeout' in data:
+            XML.SubElement(clo, 'timeout').text = str(data['timeout']).lower()
+        if 'honor-refspec' in data:
+            XML.SubElement(clo, 'honorRefspec').text = str(
+                data['honor-refspec']).lower()
+        if 'no-tags' in data:
+            XML.SubElement(clo, 'noTags').text = str(data['no-tags']).lower()
     if 'scm-name' in data:
         ext = XML.SubElement(exts_node, impl_prefix + 'ScmName')
         XML.SubElement(ext, 'name').text = str(data['scm-name'])
-    if 'shallow-clone' in data or 'timeout' in data:
-        clo = XML.SubElement(exts_node, impl_prefix + 'CloneOption')
-        XML.SubElement(clo, 'shallow').text = str(
-            data.get('shallow-clone', False)).lower()
-        if 'timeout' in data:
-            XML.SubElement(clo, 'timeout').text = str(data['timeout'])
     if 'sparse-checkout' in data:
         ext_name = impl_prefix + 'SparseCheckoutPaths'
         ext = XML.SubElement(exts_node, ext_name)
